@@ -1,0 +1,243 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import LoadingStages from "../components/LoadingStages.astro";
+import RateLimitWall from "../components/RateLimitWall.astro";
+import BriefResult from "../components/BriefResult.astro";
+import { BRIEF_SAMPLES } from "../fixtures/studio-north";
+
+const REPO_URL = "https://github.com/Voxlabs-Live/brief-translator";
+---
+<ToolLayout
+  toolName="Brief Translator"
+  description="Paste a messy client message — get a structured brief, the questions to send back, and any parallel asks flagged. Part of the Agency Vibe-Coding Kit."
+  repoUrl={REPO_URL}
+>
+  <h1 class="tool-title">
+    Turn a messy client message into a <em>brief you can act on</em>.
+  </h1>
+  <p class="tool-lede">
+    Paste the WhatsApp ping, email fragment, or transcribed voice note. You&rsquo;ll
+    get the brief, the questions to send back, and any parallel asks
+    that need their own scope.
+  </p>
+
+  <section class="card">
+    <div class="samples">
+      <span class="samples__label">Try a sample:</span>
+      {BRIEF_SAMPLES.map((s) => (
+        <button class="btn btn--ghost btn--small" data-sample={s.id}>
+          {s.client}
+        </button>
+      ))}
+    </div>
+
+    <label class="field-label" for="message">
+      Client message
+      <span class="field-hint">Up to 8000 characters</span>
+    </label>
+    <textarea
+      class="input"
+      id="message"
+      name="message"
+      placeholder="Paste here — WhatsApp ping, email fragment, transcribed voice note..."
+      rows="6"
+    ></textarea>
+
+    <div class="actions">
+      <button class="btn btn--primary" id="submit">Translate brief &rarr;</button>
+      <LoadingStages />
+      <span class="actions__hint" id="hint"></span>
+    </div>
+  </section>
+
+  <BriefResult />
+  <RateLimitWall repoUrl={REPO_URL} />
+</ToolLayout>
+
+<script>
+  import { BRIEF_SAMPLES } from "../fixtures/studio-north";
+  import type { BriefResult } from "../lib/brief-types";
+  import type { ApiResponse } from "../lib/types";
+
+  const $ = (sel: string) => document.querySelector(sel) as HTMLElement | null;
+  const message = $("#message") as HTMLTextAreaElement;
+  const submit = $("#submit") as HTMLButtonElement;
+  const hint = $("#hint");
+  const loading = document.querySelector(".loading") as HTMLElement | null;
+  const result = document.querySelector(".result") as HTMLElement | null;
+  const wall = document.querySelector(".wall") as HTMLElement | null;
+
+  // Sample picker — populate textarea from the fixture id.
+  document.querySelectorAll<HTMLButtonElement>("[data-sample]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.sample;
+      const sample = BRIEF_SAMPLES.find((s) => s.id === id);
+      if (sample) {
+        message.value = sample.message;
+        message.focus();
+      }
+    });
+  });
+
+  // Copy actions on the result panel.
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const data = (window as any).__lastResult as BriefResult | undefined;
+      if (!data) return;
+      const text =
+        btn.dataset.copy === "notion" ? toNotion(data) : toMarkdown(data);
+      navigator.clipboard.writeText(text);
+      const orig = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => (btn.textContent = orig), 1400);
+    });
+  });
+
+  submit.addEventListener("click", async () => {
+    const text = message.value.trim();
+    if (!text) {
+      message.focus();
+      return;
+    }
+
+    submit.disabled = true;
+    if (hint) hint.textContent = "";
+    if (result) result.hidden = true;
+    if (wall) wall.hidden = true;
+    if (loading) {
+      loading.hidden = false;
+      loading.dataset.stage = "reading";
+    }
+
+    // Soft UX nudge: advance the loading indicator before the response lands
+    // so the 3-stage UI feels alive even though there's no real progress
+    // stream.
+    const t1 = window.setTimeout(() => {
+      if (loading) loading.dataset.stage = "extracting";
+    }, 700);
+
+    try {
+      const res = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const payload = (await res.json()) as ApiResponse<BriefResult>;
+
+      window.clearTimeout(t1);
+
+      if (!payload.ok) {
+        if (payload.error === "rate_limit_exceeded" && wall) {
+          wall.hidden = false;
+          wall.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (hint) {
+          hint.textContent = payload.message;
+        }
+        return;
+      }
+
+      if (loading) loading.dataset.stage = "done";
+      (window as any).__lastResult = payload.data;
+      render(payload.data);
+      if (hint && Number.isFinite(payload.remaining)) {
+        hint.textContent =
+          payload.remaining > 0
+            ? `${payload.remaining} demo run${payload.remaining === 1 ? "" : "s"} remaining`
+            : "Last demo run used — fork to keep going.";
+      }
+    } catch (err) {
+      if (hint) hint.textContent = "Network error. Try again.";
+    } finally {
+      submit.disabled = false;
+      // Hide loading after a beat so user sees the "done" state briefly.
+      window.setTimeout(() => {
+        if (loading) loading.hidden = true;
+      }, 600);
+    }
+  });
+
+  function render(data: BriefResult) {
+    if (!result) return;
+    result.hidden = false;
+    const setField = (key: string, value: string) => {
+      const el = result.querySelector(`[data-field="${key}"]`);
+      if (el) el.textContent = value;
+    };
+    setField("project", data.brief.project);
+    setField("deliverable", data.brief.deliverable);
+    setField("audience", data.brief.audience);
+    setField("key_message", data.brief.key_message);
+    setField("references", data.brief.references);
+    setField("brand", data.brief.brand);
+    setField("deadline", data.brief.deadline);
+    setField("constraints", data.brief.constraints);
+
+    const oq = result.querySelector('[data-field="openQuestions"]') as HTMLElement;
+    const oqEmpty = result.querySelector('[data-field="openQuestionsEmpty"]') as HTMLElement;
+    oq.innerHTML = "";
+    if (data.openQuestions.length === 0) {
+      oqEmpty.hidden = false;
+    } else {
+      oqEmpty.hidden = true;
+      data.openQuestions.forEach((q) => {
+        const li = document.createElement("li");
+        li.textContent = q;
+        oq.appendChild(li);
+      });
+    }
+
+    const pa = result.querySelector('[data-field="parallelAsks"]') as HTMLElement;
+    const paEmpty = result.querySelector('[data-field="parallelAsksEmpty"]') as HTMLElement;
+    pa.innerHTML = "";
+    if (data.parallelAsks.length === 0) {
+      paEmpty.hidden = false;
+    } else {
+      paEmpty.hidden = true;
+      data.parallelAsks.forEach((p) => {
+        const li = document.createElement("li");
+        const desc = document.createElement("p");
+        desc.className = "parallel__desc";
+        desc.textContent = p.description;
+        const why = document.createElement("p");
+        why.className = "parallel__why";
+        why.textContent = p.why_separate;
+        li.appendChild(desc);
+        li.appendChild(why);
+        pa.appendChild(li);
+      });
+    }
+
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function toMarkdown(d: BriefResult): string {
+    const b = d.brief;
+    const lines = [
+      "## Brief",
+      `- **Project:** ${b.project}`,
+      `- **Deliverable:** ${b.deliverable}`,
+      `- **Audience:** ${b.audience}`,
+      `- **Key message:** ${b.key_message}`,
+      `- **References:** ${b.references}`,
+      `- **Brand:** ${b.brand}`,
+      `- **Deadline:** ${b.deadline}`,
+      `- **Constraints:** ${b.constraints}`,
+      "",
+      "## Open questions to send back",
+      ...d.openQuestions.map((q) => `- ${q}`),
+    ];
+    if (d.parallelAsks.length > 0) {
+      lines.push("", "## Parallel asks detected");
+      d.parallelAsks.forEach((p) => {
+        lines.push(`- **${p.description}** — ${p.why_separate}`);
+      });
+    }
+    return lines.join("\n");
+  }
+
+  function toNotion(d: BriefResult): string {
+    // Notion accepts Markdown on paste; this variant uses bold inline labels
+    // (which Notion converts to its property-style on paste into a database).
+    return toMarkdown(d);
+  }
+</script>

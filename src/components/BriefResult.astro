@@ -1,0 +1,137 @@
+---
+// Renders the BriefResult JSON returned by /api/extract. The page's client
+// script populates this component's [data-field] elements after a successful
+// call — no SSR data needed.
+---
+<section class="result" hidden>
+  <header class="result__head">
+    <p class="kicker">Translated brief</p>
+    <div class="result__actions">
+      <button class="btn btn--ghost btn--small" data-copy="markdown">
+        Copy as Markdown
+      </button>
+      <button class="btn btn--ghost btn--small" data-copy="notion">
+        Copy for Notion
+      </button>
+    </div>
+  </header>
+
+  <article class="block">
+    <h3 class="block__h">Brief</h3>
+    <dl class="brief">
+      <div><dt>Project</dt><dd data-field="project"></dd></div>
+      <div><dt>Deliverable</dt><dd data-field="deliverable"></dd></div>
+      <div><dt>Audience</dt><dd data-field="audience"></dd></div>
+      <div><dt>Key message</dt><dd data-field="key_message"></dd></div>
+      <div><dt>References</dt><dd data-field="references"></dd></div>
+      <div><dt>Brand</dt><dd data-field="brand"></dd></div>
+      <div><dt>Deadline</dt><dd data-field="deadline"></dd></div>
+      <div><dt>Constraints</dt><dd data-field="constraints"></dd></div>
+    </dl>
+  </article>
+
+  <article class="block">
+    <h3 class="block__h">Open questions to send back</h3>
+    <ul class="open-q" data-field="openQuestions"></ul>
+    <p class="empty-state" data-field="openQuestionsEmpty" hidden>
+      Nothing missing &mdash; rare and lovely.
+    </p>
+  </article>
+
+  <article class="block">
+    <h3 class="block__h">Parallel asks detected</h3>
+    <ul class="parallel" data-field="parallelAsks"></ul>
+    <p class="empty-state" data-field="parallelAsksEmpty" hidden>
+      No parallel asks &mdash; the client stayed on one thing.
+    </p>
+  </article>
+</section>
+
+<style>
+  .result {
+    background: var(--surface-0);
+    border: 1px solid var(--surface-200);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-top: 1.5rem;
+    box-shadow: var(--shadow-card);
+  }
+  @media (max-width: 600px) { .result { padding: 1.5rem; } }
+
+  .result__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--surface-200);
+  }
+  .result__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  .block + .block { margin-top: 1.75rem; }
+  .block__h {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    margin-bottom: 0.75rem;
+  }
+
+  .brief {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1.25rem;
+    font-size: var(--text-base);
+  }
+  .brief dt {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--surface-500);
+    align-self: start;
+    padding-top: 0.2rem;
+  }
+  .brief dd { color: var(--surface-900); }
+  .brief dd:empty::before { content: "—"; color: var(--surface-400); }
+
+  .open-q { list-style: none; padding: 0; }
+  .open-q li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.55rem;
+    color: var(--surface-800);
+  }
+  .open-q li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0.6rem;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber-500);
+  }
+
+  .parallel { list-style: none; padding: 0; }
+  .parallel li {
+    background: var(--accent-50);
+    border-left: 3px solid var(--accent-500);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .parallel__desc {
+    font-weight: var(--font-weight-semibold);
+    color: var(--surface-900);
+    margin-bottom: 0.25rem;
+  }
+  .parallel__why {
+    font-size: var(--text-sm);
+    color: var(--surface-700);
+  }
+
+  .empty-state {
+    font-style: italic;
+    color: var(--surface-500);
+    font-size: var(--text-sm);
+  }
+</style>

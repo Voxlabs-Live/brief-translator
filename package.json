@@ -1,0 +1,24 @@
+{
+  "name": "brief-translator",
+  "version": "0.1.0",
+  "description": "Paste a messy client message, get a structured creative brief with open-questions and parallel-asks flagged. Part of the Agency Vibe-Coding Kit.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
+    "@astrojs/vercel": "^8.0.0",
+    "@upstash/redis": "^1.38.0",
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^25.7.0",
+    "typescript": "^5.9.3"
+  }
+}
