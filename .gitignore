@@ -15,3 +15,6 @@ FORHAN.md
 
 # Eval suite output (only generated if eval is run from a tool repo)
 out/
+
+# Claude Design export (local-only reference for brand pass)
+claude-design-export/

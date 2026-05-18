@@ -44,7 +44,11 @@ const REPO_URL = "https://github.com/Voxlabs-Live/brief-translator";
     ></textarea>
 
     <div class="actions">
-      <button class="btn btn--primary" id="submit">Translate brief &rarr;</button>
+      <button class="btn btn--primary" id="submit">
+        <span class="btn__label">Translate brief</span>
+        <span class="btn__sep" aria-hidden="true"></span>
+        <span class="btn__icon" aria-hidden="true">&rarr;</span>
+      </button>
       <LoadingStages />
       <span class="actions__hint" id="hint"></span>
     </div>

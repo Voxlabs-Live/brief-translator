@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+// Studio North brand-pass overrides — loaded AFTER global.css so selector-level
+// overrides win on equal specificity (token overrides in :root would win regardless).
+import "../styles/_studio-north-overrides.css";
 
 interface Props {
   /** Display name of the tool (e.g. "Brief Translator"). */
@@ -25,15 +28,15 @@ const year = new Date().getFullYear();
     <title>{title}</title>
     <meta name="description" content={description} />
 
-    <!-- Active design system (Ember G): Playfair Display (display + italic
-         emphasis) + Source Sans 3 (body) + JetBrains Mono (technical labels,
-         kickers, status). Swap to B (Confident Technical) requires
-         re-copying tokens.css and updating this link tag. -->
+    <!-- Active design system (Studio North brand-pass — Confident Technical
+         Alternate-B): Inter (display + body, weights 400/500/600/700) +
+         JetBrains Mono (technical labels, kickers, status). Loaded over the
+         kit's Ember G tokens via src/styles/_studio-north-overrides.css. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
     />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

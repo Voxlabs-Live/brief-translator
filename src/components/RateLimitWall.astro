@@ -20,7 +20,11 @@ const deployUrl = `https://vercel.com/new/clone?repository-url=${encodeURICompon
     deploy guide.
   </p>
   <div class="wall__actions">
-    <a class="btn btn--primary" href={deployUrl}>Deploy to Vercel &rarr;</a>
+    <a class="btn btn--primary" href={deployUrl}>
+      <span class="btn__label">Deploy to Vercel</span>
+      <span class="btn__sep" aria-hidden="true"></span>
+      <span class="btn__icon" aria-hidden="true">&rarr;</span>
+    </a>
     <a class="btn btn--ghost" href={loomUrl}>Watch the deploy Loom</a>
   </div>
   <p class="wall__footnote">
