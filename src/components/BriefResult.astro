@@ -95,6 +95,20 @@
   .brief dd { color: var(--surface-900); }
   .brief dd:empty::before { content: "—"; color: var(--surface-400); }
 
+  /* Below 600px the 2-col grid cramps badly — the `max-content` column
+     inflates to fit the widest dd (e.g. "the last one — previous reel,
+     not identified") and pushes the whole grid past the viewport.
+     Stack to single-column flow: each label/value pair gets its own row,
+     label on top. */
+  @media (max-width: 600px) {
+    .brief {
+      grid-template-columns: 1fr;
+      gap: 0.25rem 0;
+    }
+    .brief > div { margin-bottom: 0.65rem; }
+    .brief > div:last-child { margin-bottom: 0; }
+  }
+
   .open-q { list-style: none; padding: 0; }
   .open-q li {
     position: relative;

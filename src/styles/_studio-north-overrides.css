@@ -199,22 +199,8 @@ input.input:focus {
   border-color: var(--surface-200);
 }
 
-/* ── Mobile responsive: stack the Brief 2-column grid below 600px ──
-   On wide screens the brief renders as a 2-col grid (pairs of dt/dd
-   per row). At narrow viewports that layout cramps badly — the
-   right-column values wrap onto 3 lines. Below 600px, switch to a
-   single-column flow so each label/value pair gets its own full-width
-   row, label on top. Same pattern as the result__head flex-wrap.
-   !important needed to win over BriefResult.astro's scoped styles.   */
-@media (max-width: 600px) {
-  .brief {
-    grid-template-columns: 1fr !important;
-    gap: 0.25rem 0 !important;
-  }
-  .brief > div {
-    margin-bottom: 0.65rem;
-  }
-  .brief > div:last-child {
-    margin-bottom: 0;
-  }
-}
+/* Note: the .brief mobile responsive rule lives in BriefResult.astro
+ * itself (kit base) as of 2026-05-19 — moved out of this override file
+ * because it's structural responsive behavior, not brand-pass styling.
+ * Earlier commit 43179f1 put it here with !important; the same rule
+ * now lives in the base component and applies kit-wide. */
